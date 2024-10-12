@@ -1,0 +1,47 @@
+Notes / links from Teensy4.1 bringup
+
+install teensy support in arduino IDE
+https://www.pjrc.com/teensy/td_download.html
+
+Adapt serial project to use String and readString 
+https://www.arduino.cc/reference/en/language/functions/communication/serial/readstring/
+https://www.arduino.cc/reference/en/language/variables/data-types/stringobject/
+
+next up - json serial input to call fxn + return code
+https://arduinojson.org/v6/how-to/do-serial-communication-between-two-boards/
+
+use lookup table to call function
+https://stackoverflow.com/questions/1118705/call-a-function-named-in-a-string-variable-in-c
+https://stackoverflow.com/questions/5193570/value-lookup-table-in-c-by-strings
+
+use json list to pass args
+https://arduinojson.org/v7/example/status
+
+teensy pinout
+https://www.pjrc.com/store/teensy41.html
+
+teensy uart
+https://www.pjrc.com/teensy/td_uart.html
+
+UART on 2 ports example
+https://arduinojson.org/v6/how-to/do-serial-communication-between-two-boards/
+
+
+ON RPI:
+rsapi-config
+	- enabld ssh 
+	- enable GPIO
+	- disable login over serial
+	- enable serial
+
+sudo usermod -a -G dialout $USER
+
+
+first time setup
+https://www.abelectronics.co.uk/kb/article/1035/serial-port-setup-in-raspberry-pi-os
+
+rPI serial port issue I struggled with
+https://forums.raspberrypi.com/viewtopic.php?t=291957#p1765321
+
+rPI4 manual:
+https://www.raspberrypi.com/documentation/computers/raspberry-pi.html
