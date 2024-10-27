@@ -7,12 +7,12 @@ Library intended to support Arduino remote command execution via simple serial c
 ### Devices used:
 - RaspberryPi 4
 
-<img src="https://www.raspberrypi.com/documentation/computers/images/GPIO-Pinout-Diagram-2.png?hash=df7d7847c57a1ca6d5b2617695de6d46" width="800">
+    <img src="https://www.raspberrypi.com/documentation/computers/images/GPIO-Pinout-Diagram-2.png?hash=df7d7847c57a1ca6d5b2617695de6d46" width="800">
 
 
 - Teensy 4.1 
 
-<img src="https://www.pjrc.com/store/teensy41_card11a_rev3.png" width="500">
+    <img src="https://hackaday.com/wp-content/uploads/2020/05/teensy-4.1-pinout.png?" width="800">
 
 
 ### HW Connections:
@@ -26,18 +26,14 @@ Serial Connections:
 - RPi Pin 10 (UART RXD) --> Teensy Pin 1 (UART TX1)
 - RPi Pin 14 (GND) --> Teensy Pin -1 / Gnd (GND)
 
+Teensy flash from RPi:
+- RPi USB --> Teensy USB
+- RPi GPIO # --> Teensy PGM (2 left of pin 38)
 
 ## SW Setup
 
-### Teensy 4.1 ([specs](https://www.pjrc.com/store/teensy41.html))
-- Today, modifying teensy code and flashing the bitfile can't be done from the RPi. This is on the to-do list 
-- Install the Arduino IDE + Teensyduino board support on a suitable host computer. [Instructions](https://www.pjrc.com/teensy/td_download.html)
-- In the ArduinoIDE, install the [arduinojson](https://arduinojson.org/v7/how-to/install-arduinojson/#method-1-arduino-ide) library
-- Connect your host computer to the Teensy via USB and make sure it is connected / discoverable
-- Open the `bs_unit_impl.ino` sketck in the Arduino IDE, compile and upload.
-
 ### Raspberry Pi ([docs](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html))
-- Any version of raspbian should work. Figure it out [here](https://www.raspberrypi.com/documentation/computers/getting-started.html)
+- Any 64-bit version of Raspbian should work, I'm using `bookworm / x64 / no GUI`. Figure it out [here](https://www.raspberrypi.com/documentation/computers/getting-started.html)
 - Connect the RPi to your WiFi for easy development. [SSH into the RPi](https://www.raspberrypi.com/documentation/computers/remote-access.html) for the subsequent instructions
 - Using `raspi-config`, set the following:
 	- enable ssh 
@@ -47,6 +43,9 @@ Serial Connections:
 - Install several updates and deps:
 ```
 sudo apt-get update
+sudo apt-get install libusb-dev software-properties-common
+
+sudo apt-get install git make gcc ant openjdk-8-jdk unzip
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 - Give your user account access to the serial pins: 
@@ -64,6 +63,54 @@ cd ~/rpi_arduino
 ```
 uv run rpi_ard_comms.py
 ```
+
+### Teensy 4.1 ([specs](https://www.pjrc.com/store/teensy41.html))
+
+#### Flashing `*.hex` from RPi -> Teensy
+- One-time RPi flash setup
+```
+cd ~
+git clone https://github.com/PaulStoffregen/teensy_loader_cli.git
+cd ~/teensy_loader_cli
+git checkout origin/master
+make
+wget https://www.pjrc.com/teensy/00-teensy.rules
+sudo cp 00-teensy.rules /etc/udev/rules.d/
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
+- To flash `*.hex` file to Teensy:
+```
+# Teensy 4.1
+cd ~/teensy_loader_cli
+./teensy_loader_cli -s -v --mcu=TEENSY41 -w ../rpi_arduino/teensy_images/bs_unit_impl.ino_2024_10_12.hex
+
+# Teensy 4.0
+cd ~/teensy_loader_cli
+./teensy_loader_cli -s -v --mcu=TEENSY40 -w blink_slow_Teensy40.hex # NOTE: after flashing this image, you'll have to hit the program button to put a new image on
+```
+#### Compiling `*.ino` -> `*.hex` on RPi (still a work in progress)
+
+- One-time RPi compiler setup:
+```
+curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+export PATH="$HOME/bin:$PATH"
+
+wget https://www.pjrc.com/teensy/td_159/TeensyduinoInstall.linuxaarch64
+chmod 755 TeensyduinoInstall.linuxaarch64
+
+#still figuring this out
+```
+- To compile your `*.ino` into a `*.hex` file:
+```
+#do the thing
+```
+#### Compiling `*.ino` -> `*.hex` on a host machine (using Arduino IDE UI)
+- Install the Arduino IDE + Teensyduino board support on a suitable host computer. [Instructions](https://www.pjrc.com/teensy/td_download.html)
+- In the ArduinoIDE, install the [arduinojson](https://arduinojson.org/v7/how-to/install-arduinojson/#method-1-arduino-ide) library
+- Select your Teensy board version as the target for compilation
+- Open the `bs_unit_impl.ino` sketck in the Arduino IDE, and compile for your board
+
 
 
 ## Communication format
