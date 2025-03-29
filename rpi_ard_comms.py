@@ -3,6 +3,7 @@ import time
 import json
 import re
 import random
+import sys
 
 MAX_CMDID = 99999
 
@@ -126,6 +127,53 @@ class arduino_control():
             except KeyboardInterrupt:
                 self.cleanup()
 
+    def run_link_bler(self) -> None:
+        # TODO
+        hours = .01
+        end = time.time() + hours*60*60
+        
+        print(f"Running BLER test for {hours} hours")
+        attempts = 0
+        success = 0
+        failure = 0
+
+        while time.time() <= end:
+            try:
+                attempts += 1
+
+                cmd = str(self._init_cmd_dict(self.do_nothing.__name__)).replace("\'", "\"")
+                self.arduino.write(cmd.encode())
+                response = self._read_response_from_arduino()
+                for frame in response:
+                    if frame["status"] == 1: # status 1 is a command ACK
+                        response.remove(frame)
+                        break 
+            except KeyboardInterrupt:
+                raise
+            except:
+                failure += 1
+                pass
+            else:
+                success += 1
+                pass
+
+            sys.stdout.write("\r" + f"BLER: {failure / (success + failure)}")
+            sys.stdout.flush()
+            time.sleep(.001)
+
+        print(f"\n\nBLER Summary:")
+        print(f"\tItterations: {attempts}")
+        print(f"\tSuccesses + Failures: {success + failure}")            
+        print(f"\tLink Successes: {success}")            
+        print(f"\tLink Failures: {failure}")
+        print(f"\tBLER: {failure / (success + failure)}")
+
+        # Log success/failure as rolling success percentage
+        # Dump failure deets to file?
+        # run in loop over N hours
+        # Log overall stats
+        pass               
+
 ### User API Functions
 
     def do_nothing(self):
@@ -148,4 +196,5 @@ class arduino_control():
 if __name__ == "__main__":
     arduino_debug = arduino_control()
     arduino_debug.run_debug()
+    # arduino_debug.run_link_bler()
     arduino_debug.cleanup()
